@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +27,16 @@ export default function Sidebar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const { logout, user } = useAuth();
 
+    const isMd = useSyncExternalStore(
+        (onChange) => {
+            const mq = window.matchMedia('(min-width: 768px)');
+            mq.addEventListener('change', onChange);
+            return () => mq.removeEventListener('change', onChange);
+        },
+        () => window.matchMedia('(min-width: 768px)').matches,
+        () => false
+    );
+
     useEffect(() => {
         const toggle = () => setMobileOpen(prev => !prev);
         window.addEventListener('toggleMobileMenu', toggle);
@@ -39,8 +49,6 @@ export default function Sidebar() {
         else document.body.style.overflow = '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileOpen]);
-
-    const sidebarW = collapsed ? 72 : 240;
 
     return (
         <>
@@ -59,15 +67,18 @@ export default function Sidebar() {
             </AnimatePresence>
 
             <motion.aside
-                animate={{ width: sidebarW }}
+                initial={false}
+                animate={isMd ? { width: collapsed ? 72 : 240 } : undefined}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 className={`
-                    fixed left-0 top-0 h-screen z-50 flex flex-col
-                    glass-sidebar overflow-hidden
+                    fixed left-0 top-0 z-50 flex flex-col glass-sidebar overflow-hidden
+                    h-[100dvh] max-h-[100dvh]
+                    pt-[env(safe-area-inset-top,0px)]
+                    pl-[env(safe-area-inset-left,0px)]
+                    ${!isMd ? 'w-[min(88vw,300px)] max-w-[300px]' : ''}
                     ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                     transition-transform duration-300 md:transition-none
                 `}
-                style={{ width: window.innerWidth < 768 ? 260 : sidebarW }}
             >
                 {/* Sidebar top glow */}
                 <div className="absolute top-0 left-0 right-0 h-px"
@@ -196,7 +207,7 @@ export default function Sidebar() {
                 </nav>
 
                 {/* User + Logout */}
-                <div className="px-2.5 pb-3 border-t border-white/[0.06] pt-3 space-y-1">
+                <div className="px-2.5 pt-3 border-t border-white/[0.06] space-y-1 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
                     {/* User chip */}
                     <AnimatePresence>
                         {!collapsed && (

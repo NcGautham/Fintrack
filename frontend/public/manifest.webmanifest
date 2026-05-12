@@ -1,0 +1,25 @@
+{
+  "name": "FinTrack — Finance Tracker",
+  "short_name": "FinTrack",
+  "description": "Track stocks, SIPs, and transactions",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#04070f",
+  "theme_color": "#04070f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

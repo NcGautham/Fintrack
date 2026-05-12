@@ -36,7 +36,7 @@ export default function Register() {
     ];
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#04070f] p-4">
+        <div className="relative min-h-dvh flex items-center justify-center overflow-hidden bg-[#04070f] p-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))]">
             <div className="ambient-bg" />
             <div className="fixed top-1/3 right-1/4 w-96 h-96 rounded-full pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse, rgba(124,111,255,0.10) 0%, transparent 70%)' }} />

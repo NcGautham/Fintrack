@@ -51,13 +51,13 @@ export default function App() {
 
           <Route path="/*" element={
             <ProtectedRoute>
-              <div className="flex min-h-screen bg-[#04070f]">
+              <div className="flex min-h-dvh w-full bg-[#04070f] pb-[env(safe-area-inset-bottom,0px)]">
                 {/* Ambient background */}
                 <div className="ambient-bg" />
 
                 <Sidebar />
 
-                <main className="flex-1 md:ml-[240px] transition-all duration-300 w-full overflow-x-hidden relative z-10">
+                <main className="flex-1 min-w-0 md:ml-[240px] transition-all duration-300 w-full overflow-x-hidden relative z-10 pt-[env(safe-area-inset-top,0px)]">
                   <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
                     <AnimatedRoutes />
                   </div>
@@ -68,8 +68,13 @@ export default function App() {
         </Routes>
 
         <Toaster
-          position="bottom-right"
+          position="bottom-center"
           gutter={8}
+          containerStyle={{
+            bottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
+            left: 'max(12px, env(safe-area-inset-left, 0px))',
+            right: 'max(12px, env(safe-area-inset-right, 0px))',
+          }}
           toastOptions={{
             duration: 3500,
             style: {

@@ -29,7 +29,7 @@ export default function Login() {
     };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#04070f] p-4">
+        <div className="relative min-h-dvh flex items-center justify-center overflow-hidden bg-[#04070f] p-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))]">
             {/* Ambient background */}
             <div className="ambient-bg" />
 

@@ -40,12 +40,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 24, scale: 0.96 }}
                             transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
-                            className={`w-full ${maxW} max-h-[92dvh] overflow-y-auto relative`}
+                            className={`w-full ${maxW} max-h-[92dvh] overflow-y-auto relative rounded-t-[20px] border border-white/10 border-b-0 sm:rounded-[20px] sm:border-b`}
                             style={{
                                 background: 'linear-gradient(135deg, rgba(15,22,41,0.97) 0%, rgba(10,16,32,0.98) 100%)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderBottom: window.innerWidth < 640 ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: window.innerWidth < 640 ? '20px 20px 0 0' : '20px',
                                 boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,111,255,0.08)',
                                 backdropFilter: 'blur(40px)',
                             }}
@@ -73,7 +70,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                             </div>
 
                             {/* Content */}
-                            <div className="px-6 py-5">
+                            <div className="px-6 py-5 sm:pb-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
                                 {children}
                             </div>
                         </motion.div>
