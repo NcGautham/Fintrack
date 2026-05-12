@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wallet, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import { authAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -52,18 +52,6 @@ export default function Login() {
                     transition={{ delay: 0.1, duration: 0.5 }}
                     className="flex flex-col items-center mb-8"
                 >
-                    <motion.div
-                        whileHover={{ rotate: 10, scale: 1.08 }}
-                        whileTap={{ scale: 0.96 }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-pulse-glow"
-                        style={{
-                            background: 'linear-gradient(135deg, #7c6fff 0%, #a78bfa 50%, #22d3ee 100%)',
-                            boxShadow: '0 8px 32px rgba(124,111,255,0.4)',
-                        }}
-                    >
-                        <Wallet className="w-8 h-8 text-white" />
-                    </motion.div>
                     <h1 className="text-3xl font-bold text-gradient">FinTrack</h1>
                     <p className="text-sm text-slate-500 mt-1 tracking-wide">Your financial command centre</p>
                 </motion.div>
