@@ -1,13 +1,20 @@
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Inbox } from 'lucide-react';
 
-const COLORS = ['#5c7cfa', '#8b5cf6', '#10b981', '#f59e0b', '#f43f5e', '#06b6d4'];
+const COLORS = ['#7c6fff', '#34d399', '#fbbf24', '#fb7185', '#22d3ee', '#a78bfa', '#60a5fa'];
 
 const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
         return (
-            <div className="glass-card px-4 py-3">
-                <p className="text-white font-medium text-sm">{payload[0].name}</p>
+            <div style={{
+                background: 'rgba(10,16,32,0.95)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                padding: '10px 14px',
+                backdropFilter: 'blur(20px)',
+            }}>
+                <p className="text-white font-semibold text-xs">{payload[0].name}</p>
                 <p className="text-slate-400 text-xs mt-1">
                     ₹{payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
@@ -18,46 +25,34 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function PortfolioChart({ stocks }) {
-    const data = stocks.map((stock) => ({
-        name: stock.ticker,
-        value: stock.currentValue || stock.currentPrice * stock.quantity,
-    }));
+    const data = stocks.map(s => ({ name: s.ticker, value: s.currentValue || s.currentPrice * s.quantity }));
 
-    if (data.length === 0) {
-        return (
-            <div className="glass-card p-6 h-80 flex items-center justify-center">
-                <p className="text-slate-500">No stock data available</p>
+    if (data.length === 0) return (
+        <div className="glass-card p-6 h-72 flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
+                <Inbox className="w-5 h-5 text-slate-600" />
             </div>
-        );
-    }
+            <p className="text-sm text-slate-600">No portfolio data</p>
+        </div>
+    );
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="glass-card p-6"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card p-5"
         >
-            <h3 className="text-lg font-semibold text-white mb-4">Portfolio Distribution</h3>
-            <div className="h-64">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Portfolio Distribution</p>
+            <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
-                            paddingAngle={4}
-                            dataKey="value"
-                            animationBegin={200}
-                            animationDuration={1000}
-                        >
-                            {data.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={COLORS[index % COLORS.length]}
+                        <Pie data={data} cx="50%" cy="50%" innerRadius={52} outerRadius={90}
+                            paddingAngle={3} dataKey="value" animationBegin={150} animationDuration={900}>
+                            {data.map((_, i) => (
+                                <Cell key={i} fill={COLORS[i % COLORS.length]}
                                     stroke="transparent"
+                                    style={{ filter: `drop-shadow(0 0 6px ${COLORS[i % COLORS.length]}55)` }}
                                 />
                             ))}
                         </Pie>
@@ -65,16 +60,11 @@ export default function PortfolioChart({ stocks }) {
                     </PieChart>
                 </ResponsiveContainer>
             </div>
-
-            {/* Legend */}
-            <div className="flex flex-wrap gap-3 mt-4 justify-center">
-                {data.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                        <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="text-xs text-slate-400">{entry.name}</span>
+            <div className="flex flex-wrap gap-2 mt-3 justify-center">
+                {data.map((e, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="text-[11px] text-slate-500">{e.name}</span>
                     </div>
                 ))}
             </div>

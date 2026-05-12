@@ -12,7 +12,6 @@ com/financetracker/model/Stock.class
 com/financetracker/controller/AuthController.class
 com/financetracker/security/jwt/AuthTokenFilter.class
 com/financetracker/config/SecurityConfig.class
-com/financetracker/config/DataSeeder.class
 com/financetracker/service/DashboardService.class
 com/financetracker/controller/TransactionController.class
 com/financetracker/repository/UserRepository.class

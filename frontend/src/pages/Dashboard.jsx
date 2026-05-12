@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-    TrendingUp,
-    TrendingDown,
-    Wallet,
-    PiggyBank,
-    ArrowUpRight,
-    ArrowDownRight,
-    DollarSign,
-    Activity,
+    TrendingUp, TrendingDown, Wallet, PiggyBank,
+    ArrowUpRight, ArrowDownRight, DollarSign, Activity, Sparkles,
 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import Card from '../components/ui/Card';
@@ -17,10 +11,27 @@ import ProfitLossChart from '../components/charts/ProfitLossChart';
 import TransactionChart from '../components/charts/TransactionChart';
 import { dashboardAPI, stockAPI, transactionAPI } from '../api/api';
 
-const formatCurrency = (value) => {
-    if (value == null) return '₹0';
-    return '₹' + Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+const fmt = (v) => v == null ? '₹0' : '₹' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function Skeleton({ className = '' }) {
+    return <div className={`skeleton ${className}`} />;
+}
+
+function LoadingState() {
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
+            </div>
+        </div>
+    );
+}
 
 export default function Dashboard() {
     const [summary, setSummary] = useState(null);
@@ -29,159 +40,102 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [summaryRes, stocksRes, transactionsRes] = await Promise.all([
-                    dashboardAPI.getSummary(),
-                    stockAPI.getAll(),
-                    transactionAPI.getAll(),
-                ]);
-                setSummary(summaryRes.data);
-                setStocks(stocksRes.data);
-                setTransactions(transactionsRes.data);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        Promise.all([dashboardAPI.getSummary(), stockAPI.getAll(), transactionAPI.getAll()])
+            .then(([s, st, tx]) => {
+                setSummary(s.data);
+                setStocks(st.data);
+                setTransactions(tx.data);
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full"
-                />
-            </div>
-        );
-    }
+    if (loading) return (
+        <div>
+            <Header title="Dashboard" subtitle="Your financial overview" />
+            <LoadingState />
+        </div>
+    );
 
-    const profitLoss = summary?.totalProfitLoss || 0;
-    const isProfit = profitLoss >= 0;
+    const pl = summary?.totalProfitLoss || 0;
+    const isProfit = pl >= 0;
+    const plPct = Math.abs(((pl / (summary?.totalStockInvested || 1)) * 100)).toFixed(1);
 
     return (
-        <div>
-            <Header
-                title="Dashboard"
-                subtitle="Your financial overview at a glance"
-            />
+        <div className="space-y-6">
+            <Header title="Dashboard" subtitle="Your financial overview at a glance" />
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                <Card
-                    title="Total Net Worth"
-                    value={formatCurrency(summary?.totalNetWorth)}
-                    icon={Wallet}
-                    gradient="gradient-blue"
-                    delay={0}
-                    trend={isProfit ? 'up' : 'down'}
-                    trendValue={`${Math.abs(((profitLoss / (summary?.totalStockInvested || 1)) * 100)).toFixed(1)}%`}
-                />
-                <Card
-                    title="Portfolio Value"
-                    value={formatCurrency(summary?.totalPortfolioValue)}
-                    subtitle={`${summary?.stockCount || 0} stocks held`}
-                    icon={TrendingUp}
-                    gradient="gradient-violet"
-                    delay={0.1}
-                />
-                <Card
-                    title="Profit / Loss"
-                    value={formatCurrency(profitLoss)}
-                    icon={isProfit ? ArrowUpRight : ArrowDownRight}
-                    gradient={isProfit ? 'gradient-emerald' : 'gradient-rose'}
-                    delay={0.2}
-                    trend={isProfit ? 'up' : 'down'}
-                    trendValue={`${Math.abs(((profitLoss / (summary?.totalStockInvested || 1)) * 100)).toFixed(1)}%`}
-                />
-                <Card
-                    title="SIP Investment"
-                    value={formatCurrency(summary?.totalSIPInvestment)}
-                    subtitle={`${summary?.activeSIPCount || 0} active SIPs`}
-                    icon={PiggyBank}
-                    gradient="gradient-amber"
-                    delay={0.3}
-                />
+            {/* Top stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card title="Net Worth"       value={fmt(summary?.totalNetWorth)}    icon={Wallet}      gradient="gradient-violet" delay={0}   trend={isProfit ? 'up' : 'down'} trendValue={`${plPct}%`} />
+                <Card title="Portfolio"       value={fmt(summary?.totalPortfolioValue)} subtitle={`${summary?.stockCount || 0} stocks`} icon={TrendingUp} gradient="gradient-blue" delay={0.07} />
+                <Card title="P / L"           value={fmt(pl)}                        icon={isProfit ? ArrowUpRight : ArrowDownRight} gradient={isProfit ? 'gradient-emerald' : 'gradient-rose'} delay={0.14} trend={isProfit ? 'up' : 'down'} trendValue={`${plPct}%`} />
+                <Card title="SIP Investment"  value={fmt(summary?.totalSIPInvestment)} subtitle={`${summary?.activeSIPCount || 0} active`} icon={PiggyBank} gradient="gradient-amber" delay={0.21} />
             </div>
 
-            {/* Second row of cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-                <Card
-                    title="Total Income"
-                    value={formatCurrency(summary?.totalIncome)}
-                    icon={DollarSign}
-                    gradient="gradient-emerald"
-                    delay={0.4}
-                />
-                <Card
-                    title="Total Expenses"
-                    value={formatCurrency(summary?.totalExpense)}
-                    icon={ArrowDownRight}
-                    gradient="gradient-rose"
-                    delay={0.5}
-                />
-                <Card
-                    title="Net Balance"
-                    value={formatCurrency(summary?.netBalance)}
-                    subtitle={`${summary?.transactionCount || 0} transactions`}
-                    icon={Activity}
-                    gradient="gradient-cyan"
-                    delay={0.6}
-                />
+            {/* Cashflow stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <Card title="Total Income"   value={fmt(summary?.totalIncome)}  icon={DollarSign}    gradient="gradient-emerald" delay={0.28} />
+                <Card title="Total Expenses" value={fmt(summary?.totalExpense)} icon={ArrowDownRight} gradient="gradient-rose"    delay={0.35} />
+                <Card title="Net Balance"    value={fmt(summary?.netBalance)}   subtitle={`${summary?.transactionCount || 0} transactions`} icon={Activity} gradient="gradient-cyan" delay={0.42} className="col-span-2 md:col-span-1" />
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <PortfolioChart stocks={stocks} />
                 <ProfitLossChart stocks={stocks} />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 mb-8">
-                <TransactionChart transactions={transactions} />
-            </div>
+            <TransactionChart transactions={transactions} />
 
             {/* Recent transactions */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="glass-card p-6"
+                transition={{ delay: 0.5, duration: 0.45 }}
+                className="glass-card p-5"
             >
-                <h3 className="text-lg font-semibold text-white mb-4">Recent Transactions</h3>
-                <div className="space-y-3">
-                    {transactions.slice(0, 5).map((txn, index) => (
-                        <motion.div
-                            key={txn.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.6 + index * 0.08, duration: 0.3 }}
-                            className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${txn.type === 'INCOME' ? 'bg-emerald-500/10' : 'bg-rose-500/10'
-                                    }`}>
-                                    {txn.type === 'INCOME' ? (
-                                        <ArrowUpRight className="w-5 h-5 text-emerald-400" />
-                                    ) : (
-                                        <ArrowDownRight className="w-5 h-5 text-rose-400" />
-                                    )}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-white">{txn.description}</p>
-                                    <p className="text-xs text-slate-500">{txn.category} • {txn.date}</p>
-                                </div>
-                            </div>
-                            <p className={`text-sm font-semibold ${txn.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'
-                                }`}>
-                                {txn.type === 'INCOME' ? '+' : '-'}{formatCurrency(txn.amount)}
-                            </p>
-                        </motion.div>
-                    ))}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-violet-400" />
+                        <h3 className="text-sm font-semibold text-white">Recent Transactions</h3>
+                    </div>
+                    <span className="text-[10px] text-slate-600 uppercase tracking-widest">Last 5</span>
                 </div>
+
+                {transactions.length === 0 ? (
+                    <p className="text-sm text-slate-600 text-center py-8">No transactions yet</p>
+                ) : (
+                    <div className="space-y-1">
+                        {transactions.slice(0, 5).map((txn, i) => (
+                            <motion.div
+                                key={txn.id}
+                                initial={{ opacity: 0, x: -12 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.55 + i * 0.07, duration: 0.3 }}
+                                className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-white/[0.03] transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                                        txn.type === 'INCOME' ? 'bg-emerald-500/[0.12]' : 'bg-rose-500/[0.12]'
+                                    }`}>
+                                        {txn.type === 'INCOME'
+                                            ? <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                                            : <ArrowDownRight className="w-4 h-4 text-rose-400" />
+                                        }
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-white leading-tight">{txn.description}</p>
+                                        <p className="text-[11px] text-slate-600 mt-0.5">{txn.category} · {txn.date}</p>
+                                    </div>
+                                </div>
+                                <p className={`text-sm font-bold ${txn.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {txn.type === 'INCOME' ? '+' : '-'}{fmt(txn.amount)}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </motion.div>
         </div>
     );

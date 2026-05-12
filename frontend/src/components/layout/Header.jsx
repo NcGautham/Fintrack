@@ -16,19 +16,13 @@ export default function Header({ title, subtitle }) {
     const debounceRef = useRef(null);
 
     const doSearch = useCallback(async (q) => {
-        if (!q.trim()) {
-            setResults(null);
-            return;
-        }
+        if (!q.trim()) { setResults(null); return; }
         setLoading(true);
         try {
             const res = await api.get(`/search?q=${encodeURIComponent(q)}`);
             setResults(res.data);
-        } catch {
-            setResults(null);
-        } finally {
-            setLoading(false);
-        }
+        } catch { setResults(null); }
+        finally { setLoading(false); }
     }, []);
 
     const handleChange = (e) => {
@@ -40,207 +34,169 @@ export default function Header({ title, subtitle }) {
     };
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (searchRef.current && !searchRef.current.contains(e.target)) {
-                setShowResults(false);
-            }
+        const handler = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) setShowResults(false);
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const totalResults =
-        results
-            ? (results.stocks?.length || 0) +
-            (results.sips?.length || 0) +
-            (results.transactions?.length || 0)
-            : 0;
+    const totalResults = results
+        ? (results.stocks?.length || 0) + (results.sips?.length || 0) + (results.transactions?.length || 0)
+        : 0;
 
-    const handleNavigate = (path) => {
-        navigate(path);
-        setQuery('');
-        setShowResults(false);
-        setResults(null);
-    };
-
-    const formatCurrency = (val) =>
-        new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+    const goTo = (path) => { navigate(path); setQuery(''); setShowResults(false); setResults(null); };
+    const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
     return (
         <motion.header
-            initial={{ y: -20, opacity: 0 }}
+            initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4"
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-3"
         >
-            <div className="flex items-center justify-between w-full md:w-auto">
+            {/* Title area + hamburger */}
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => window.dispatchEvent(new CustomEvent('toggleMobileMenu'))}
-                        className="md:hidden p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.06] transition-colors"
                     >
-                        <Menu className="w-6 h-6" />
+                        <Menu className="w-5 h-5" />
                     </button>
                     <div>
-                        <motion.h1
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1, duration: 0.4 }}
-                            className="text-2xl md:text-3xl font-bold text-white tracking-tight"
-                        >
-                            {title}
-                        </motion.h1>
-                        {subtitle && (
-                            <motion.p
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2, duration: 0.4 }}
-                                className="text-sm md:text-base text-slate-400 mt-0.5 md:mt-1"
-                            >
-                                {subtitle}
-                            </motion.p>
-                        )}
+                        <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">{title}</h1>
+                        {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
                     </div>
                 </div>
 
-                {/* Mobile Profile Display */}
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="md:hidden flex items-center gap-3 p-1 rounded-xl cursor-pointer"
-                >
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #5c7cfa, #8b5cf6)' }}>
-                        <UserIcon className="w-4 h-4 text-white" />
-                    </div>
-                </motion.div>
+                {/* Mobile avatar */}
+                <div className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #7c6fff, #a78bfa)' }}>
+                    <UserIcon className="w-3.5 h-3.5 text-white" />
+                </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Search + profile */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
                 {/* Search */}
-                <div ref={searchRef} className="relative w-full md:w-auto">
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="flex items-center gap-2 px-4 py-2.5 md:py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 focus-within:border-blue-500/40 w-full transition-all"
+                <div ref={searchRef} className="relative flex-1 sm:flex-none">
+                    <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-slate-500 transition-all w-full sm:w-52"
+                        style={{
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                        }}
                     >
-                        <Search className="w-4 h-4 shrink-0" />
+                        <Search className="w-3.5 h-3.5 shrink-0" />
                         <input
                             type="text"
-                            placeholder="Search stocks, SIPs, transactions..."
+                            placeholder="Search…"
                             value={query}
                             onChange={handleChange}
                             onFocus={() => { if (query.trim()) setShowResults(true); }}
-                            className="bg-transparent border-none outline-none text-sm w-full md:w-56 text-white placeholder-slate-500"
+                            className="bg-transparent border-none outline-none text-xs w-full text-white placeholder-slate-600"
                         />
                         {query && (
-                            <button onClick={() => { setQuery(''); setShowResults(false); setResults(null); }} className="text-slate-500 hover:text-white transition-colors">
-                                <X className="w-3.5 h-3.5" />
+                            <button onClick={() => { setQuery(''); setShowResults(false); setResults(null); }}
+                                className="text-slate-600 hover:text-white transition-colors">
+                                <X className="w-3 h-3" />
                             </button>
                         )}
-                    </motion.div>
+                    </div>
 
-                    {/* Search Results Dropdown */}
+                    {/* Dropdown */}
                     <AnimatePresence>
                         {showResults && query.trim() && (
                             <motion.div
-                                initial={{ opacity: 0, y: -8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
+                                initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.97 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute top-full left-0 md:left-auto md:right-0 mt-2 w-full md:w-80 rounded-xl bg-[#162040] border border-white/10 shadow-2xl z-50 overflow-hidden max-h-80 overflow-y-auto"
+                                className="absolute top-full right-0 mt-2 w-72 rounded-xl overflow-hidden max-h-80 overflow-y-auto z-50"
+                                style={{
+                                    background: 'rgba(10,16,32,0.97)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                                    backdropFilter: 'blur(20px)',
+                                }}
                             >
-                                {loading && (
-                                    <div className="px-4 py-3 text-sm text-slate-500">Searching...</div>
-                                )}
-
+                                {loading && <div className="px-4 py-3 text-xs text-slate-500">Searching…</div>}
                                 {!loading && totalResults === 0 && (
-                                    <div className="px-4 py-3 text-sm text-slate-500">No results found for &quot;{query}&quot;</div>
+                                    <div className="px-4 py-3 text-xs text-slate-500">No results for &ldquo;{query}&rdquo;</div>
                                 )}
 
-                                {/* Stocks */}
                                 {results?.stocks?.length > 0 && (
-                                    <div>
-                                        <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider bg-white/3">
-                                            Stocks
-                                        </div>
+                                    <SearchGroup label="Stocks" icon={TrendingUp} color="#34d399">
                                         {results.stocks.map((s) => (
-                                            <button
-                                                key={`stock-${s.id}`}
-                                                onClick={() => handleNavigate('/stocks')}
-                                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/8 transition-all flex items-center gap-3"
-                                            >
-                                                <TrendingUp className="w-4 h-4 text-blue-400 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white truncate">{s.name}</p>
-                                                    <p className="text-xs text-slate-500">{s.ticker} · {formatCurrency(s.currentPrice)}</p>
-                                                </div>
-                                            </button>
+                                            <SearchItem key={`s-${s.id}`} onClick={() => goTo('/stocks')}
+                                                icon={TrendingUp} color="#34d399"
+                                                primary={s.name} secondary={`${s.ticker} · ${fmt(s.currentPrice)}`} />
                                         ))}
-                                    </div>
+                                    </SearchGroup>
                                 )}
-
-                                {/* SIPs */}
                                 {results?.sips?.length > 0 && (
-                                    <div>
-                                        <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider bg-white/3">
-                                            SIP Plans
-                                        </div>
+                                    <SearchGroup label="SIP Plans" icon={Repeat} color="#a78bfa">
                                         {results.sips.map((s) => (
-                                            <button
-                                                key={`sip-${s.id}`}
-                                                onClick={() => handleNavigate('/sips')}
-                                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/8 transition-all flex items-center gap-3"
-                                            >
-                                                <Repeat className="w-4 h-4 text-violet-400 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white truncate">{s.fundName}</p>
-                                                    <p className="text-xs text-slate-500">{formatCurrency(s.monthlyAmount)}/mo · {s.status}</p>
-                                                </div>
-                                            </button>
+                                            <SearchItem key={`sip-${s.id}`} onClick={() => goTo('/sips')}
+                                                icon={Repeat} color="#a78bfa"
+                                                primary={s.fundName} secondary={`${fmt(s.monthlyAmount)}/mo · ${s.status}`} />
                                         ))}
-                                    </div>
+                                    </SearchGroup>
                                 )}
-
-                                {/* Transactions */}
                                 {results?.transactions?.length > 0 && (
-                                    <div>
-                                        <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider bg-white/3">
-                                            Transactions
-                                        </div>
+                                    <SearchGroup label="Transactions" icon={ArrowLeftRight} color="#60a5fa">
                                         {results.transactions.map((t) => (
-                                            <button
-                                                key={`txn-${t.id}`}
-                                                onClick={() => handleNavigate('/transactions')}
-                                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/8 transition-all flex items-center gap-3"
-                                            >
-                                                <ArrowLeftRight className="w-4 h-4 text-emerald-400 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white truncate">{t.description}</p>
-                                                    <p className="text-xs text-slate-500">
-                                                        {t.category} · {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
-                                                    </p>
-                                                </div>
-                                            </button>
+                                            <SearchItem key={`t-${t.id}`} onClick={() => goTo('/transactions')}
+                                                icon={ArrowLeftRight} color="#60a5fa"
+                                                primary={t.description} secondary={`${t.category} · ${t.type === 'INCOME' ? '+' : '-'}${fmt(t.amount)}`} />
                                         ))}
-                                    </div>
+                                    </SearchGroup>
                                 )}
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
 
-                {/* Desktop Profile */}
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10 cursor-pointer"
-                >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #5c7cfa, #8b5cf6)' }}>
-                        <UserIcon className="w-4 h-4 text-white" />
+                {/* Desktop avatar */}
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-default"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{ background: 'linear-gradient(135deg, #7c6fff, #a78bfa)' }}>
+                        <UserIcon className="w-3.5 h-3.5 text-white" />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-white">{user?.username || 'User'}</p>
-                        <p className="text-xs text-slate-400">Portfolio</p>
+                        <p className="text-xs font-semibold text-white leading-none">{user?.username || 'User'}</p>
+                        <p className="text-[10px] text-slate-500 leading-none mt-0.5">Portfolio</p>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </motion.header>
+    );
+}
+
+function SearchGroup({ label, children }) {
+    return (
+        <div>
+            <div className="px-4 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-widest border-b border-white/[0.04]">
+                {label}
+            </div>
+            {children}
+        </div>
+    );
+}
+
+function SearchItem({ onClick, icon: Icon, color, primary, secondary }) {
+    return (
+        <button onClick={onClick}
+            className="w-full text-left px-4 py-2.5 text-xs hover:bg-white/[0.04] transition-colors flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `${color}18` }}>
+                <Icon className="w-3.5 h-3.5" style={{ color }} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-white truncate font-medium">{primary}</p>
+                <p className="text-slate-500 truncate mt-0.5">{secondary}</p>
+            </div>
+        </button>
     );
 }

@@ -1,53 +1,83 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
+
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        if (isOpen) window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [isOpen, onClose]);
+
+    const maxW = size === 'lg' ? 'max-w-2xl' : size === 'sm' ? 'max-w-sm' : 'max-w-lg';
+
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
                     {/* Backdrop */}
                     <motion.div
+                        key="modal-backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                        className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100]"
                     />
 
-                    {/* Modal */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
-                        className="fixed inset-0 z-[101] flex items-center justify-center p-4"
-                    >
-                        <div
-                            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-6"
+                    {/* Modal positioner */}
+                    <div className="fixed inset-0 z-[101] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <motion.div
+                            key="modal-content"
+                            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                            transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
+                            className={`w-full ${maxW} max-h-[92dvh] overflow-y-auto relative`}
                             style={{
-                                background: 'linear-gradient(135deg, #162040 0%, #111a2e 100%)',
-                                border: '1px solid rgba(91, 124, 250, 0.2)',
-                                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+                                background: 'linear-gradient(135deg, rgba(15,22,41,0.97) 0%, rgba(10,16,32,0.98) 100%)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderBottom: window.innerWidth < 640 ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: window.innerWidth < 640 ? '20px 20px 0 0' : '20px',
+                                boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,111,255,0.08)',
+                                backdropFilter: 'blur(40px)',
                             }}
                         >
+                            {/* Top glow */}
+                            <div className="absolute top-0 left-10 right-10 h-px"
+                                style={{ background: 'linear-gradient(90deg, transparent, rgba(124,111,255,0.4), transparent)' }} />
+
+                            {/* Mobile drag handle */}
+                            <div className="sm:hidden flex justify-center pt-3 pb-1">
+                                <div className="w-10 h-1 rounded-full bg-white/15" />
+                            </div>
+
                             {/* Header */}
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">{title}</h2>
+                            <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+                                <h2 className="text-base font-semibold text-white">{title}</h2>
                                 <motion.button
                                     whileHover={{ scale: 1.1, rotate: 90 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.07] transition-colors"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4" />
                                 </motion.button>
                             </div>
 
                             {/* Content */}
-                            {children}
-                        </div>
-                    </motion.div>
+                            <div className="px-6 py-5">
+                                {children}
+                            </div>
+                        </motion.div>
+                    </div>
                 </>
             )}
         </AnimatePresence>

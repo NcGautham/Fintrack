@@ -1,21 +1,21 @@
 import { motion } from 'framer-motion';
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Inbox } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
+        const v = payload[0].value;
         return (
-            <div className="glass-card px-4 py-3">
-                <p className="text-white font-medium text-sm">{label}</p>
-                <p className={`text-sm mt-1 ${payload[0].value >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    ₹{payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            <div style={{
+                background: 'rgba(10,16,32,0.95)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                padding: '10px 14px',
+                backdropFilter: 'blur(20px)',
+            }}>
+                <p className="text-slate-400 text-xs font-medium">{label}</p>
+                <p className={`text-sm font-bold mt-1 ${v >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {v >= 0 ? '+' : ''}₹{v?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
             </div>
         );
@@ -24,47 +24,54 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function ProfitLossChart({ stocks }) {
-    const data = stocks.map((stock) => ({
-        name: stock.ticker,
-        value: stock.profitLoss || (stock.currentPrice - stock.buyPrice) * stock.quantity,
+    const data = stocks.map(s => ({
+        name: s.ticker,
+        value: s.profitLoss || (s.currentPrice - s.buyPrice) * s.quantity,
     }));
 
-    if (data.length === 0) {
-        return (
-            <div className="glass-card p-6 h-80 flex items-center justify-center">
-                <p className="text-slate-500">No P&L data available</p>
+    const hasProfit = data.some(d => d.value >= 0);
+
+    if (data.length === 0) return (
+        <div className="glass-card p-5 h-72 flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
+                <Inbox className="w-5 h-5 text-slate-600" />
             </div>
-        );
-    }
+            <p className="text-sm text-slate-600">No P&L data</p>
+        </div>
+    );
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="glass-card p-6"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card p-5"
         >
-            <h3 className="text-lg font-semibold text-white mb-4">Profit & Loss</h3>
-            <div className="h-64">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Profit &amp; Loss per Stock</p>
+            <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
                         <defs>
-                            <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                            <linearGradient id="plUp" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%"   stopColor="#34d399" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="plDown" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%"   stopColor="#fb7185" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="#fb7185" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                        <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#10b981"
+                        <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} width={50}
+                            tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }} />
+                        <Area type="monotone" dataKey="value"
+                            stroke={hasProfit ? '#34d399' : '#fb7185'}
                             strokeWidth={2}
-                            fill="url(#profitGradient)"
-                            animationDuration={1500}
+                            fill={hasProfit ? 'url(#plUp)' : 'url(#plDown)'}
+                            dot={{ fill: hasProfit ? '#34d399' : '#fb7185', strokeWidth: 0, r: 3 }}
+                            animationDuration={1200}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

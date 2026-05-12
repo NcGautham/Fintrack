@@ -11,26 +11,36 @@ import {
     ChevronRight,
     Wallet,
     LogOut,
-    X
+    X,
+    User,
 } from 'lucide-react';
 
 const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/stocks', icon: TrendingUp, label: 'Stocks' },
-    { path: '/sips', icon: Repeat, label: 'SIP Plans' },
-    { path: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
+    { path: '/',             icon: LayoutDashboard, label: 'Dashboard',    color: '#7c6fff' },
+    { path: '/stocks',       icon: TrendingUp,      label: 'Stocks',       color: '#34d399' },
+    { path: '/sips',         icon: Repeat,          label: 'SIP Plans',    color: '#fbbf24' },
+    { path: '/transactions', icon: ArrowLeftRight,  label: 'Transactions', color: '#60a5fa' },
 ];
 
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
 
     useEffect(() => {
-        const toggleMenu = () => setMobileOpen(prev => !prev);
-        window.addEventListener('toggleMobileMenu', toggleMenu);
-        return () => window.removeEventListener('toggleMobileMenu', toggleMenu);
+        const toggle = () => setMobileOpen(prev => !prev);
+        window.addEventListener('toggleMobileMenu', toggle);
+        return () => window.removeEventListener('toggleMobileMenu', toggle);
     }, []);
+
+    // Lock body scroll when mobile menu is open
+    useEffect(() => {
+        if (mobileOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileOpen]);
+
+    const sidebarW = collapsed ? 72 : 240;
 
     return (
         <>
@@ -38,99 +48,142 @@ export default function Sidebar() {
             <AnimatePresence>
                 {mobileOpen && (
                     <motion.div
+                        key="backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setMobileOpen(false)}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
                     />
                 )}
             </AnimatePresence>
 
             <motion.aside
-                initial={{ x: -100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className={`fixed left-0 top-0 h-screen z-50 flex flex-col transition-all duration-300 md:bg-transparent bg-[#111a2e] ${collapsed ? 'w-20' : 'w-64'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
-                style={{
-                    background: 'linear-gradient(180deg, #0f172a 0%, #111a2e 50%, #162040 100%)',
-                    borderRight: '1px solid rgba(91, 124, 250, 0.1)',
-                }}
+                animate={{ width: sidebarW }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className={`
+                    fixed left-0 top-0 h-screen z-50 flex flex-col
+                    glass-sidebar overflow-hidden
+                    ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                    transition-transform duration-300 md:transition-none
+                `}
+                style={{ width: window.innerWidth < 768 ? 260 : sidebarW }}
             >
+                {/* Sidebar top glow */}
+                <div className="absolute top-0 left-0 right-0 h-px"
+                    style={{ background: 'linear-gradient(90deg, transparent, rgba(124,111,255,0.4), transparent)' }} />
+
                 {/* Logo */}
-                <div className="flex items-center justify-between px-5 py-6 border-b border-white/5">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between px-4 py-5 border-b border-white/[0.06]">
+                    <div className="flex items-center gap-3 min-w-0">
                         <motion.div
-                            whileHover={{ rotate: 15, scale: 1.1 }}
-                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: 'linear-gradient(135deg, #5c7cfa, #8b5cf6)' }}
+                            whileHover={{ rotate: 12, scale: 1.08 }}
+                            transition={{ type: 'spring', stiffness: 400 }}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            style={{
+                                background: 'linear-gradient(135deg, #7c6fff, #a78bfa)',
+                                boxShadow: '0 4px 16px rgba(124,111,255,0.4)',
+                            }}
                         >
-                            <Wallet className="w-5 h-5 text-white" />
+                            <Wallet className="w-4 h-4 text-white" />
                         </motion.div>
                         <AnimatePresence>
                             {!collapsed && (
                                 <motion.div
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
+                                    exit={{ opacity: 0, x: -8 }}
                                     transition={{ duration: 0.2 }}
+                                    className="min-w-0"
                                 >
-                                    <h1 className="text-lg font-bold text-white tracking-tight">FinTrack</h1>
-                                    <p className="text-xs text-slate-400">Finance Tracker</p>
+                                    <p className="text-sm font-bold text-white tracking-tight leading-none">FinTrack</p>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Finance Tracker</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                    {/* Mobile Close Button */}
+
+                    {/* Mobile close */}
                     <button
-                        className="md:hidden p-1 text-slate-400 hover:text-white"
+                        className="md:hidden ml-auto p-1.5 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                         onClick={() => setMobileOpen(false)}
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-                    {navItems.map((item, index) => (
+                <nav className="flex-1 px-2.5 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+                    {navItems.map((item, idx) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            end={item.path === '/'}
                             onClick={() => setMobileOpen(false)}
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
-                                    ? 'text-white'
-                                    : 'text-slate-400 hover:text-white'
-                                }`
-                            }
                         >
                             {({ isActive }) => (
                                 <motion.div
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                                    className="flex items-center gap-3 w-full relative"
+                                    transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                    whileHover={{ x: 2 }}
+                                    className={`
+                                        group relative flex items-center gap-3 px-3 py-2.5 rounded-xl
+                                        transition-all duration-200 cursor-pointer
+                                        ${isActive ? 'text-white' : 'text-slate-500 hover:text-slate-200'}
+                                    `}
                                 >
+                                    {/* Active bg */}
                                     {isActive && (
                                         <motion.div
-                                            layoutId="activeTab"
-                                            className="absolute inset-0 rounded-xl -mx-4 -my-3 px-4 py-3"
+                                            layoutId="activeNav"
+                                            className="absolute inset-0 rounded-xl"
                                             style={{
-                                                background: 'linear-gradient(135deg, rgba(91, 124, 250, 0.15), rgba(139, 92, 246, 0.1))',
-                                                border: '1px solid rgba(91, 124, 250, 0.2)',
+                                                background: `linear-gradient(135deg, ${item.color}20, ${item.color}0a)`,
+                                                border: `1px solid ${item.color}30`,
+                                                boxShadow: `0 0 20px ${item.color}15`,
                                             }}
-                                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                                         />
                                     )}
-                                    <item.icon className={`w-5 h-5 shrink-0 relative z-10 transition-colors ${isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'
-                                        }`} />
+
+                                    {/* Active left bar */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeBar"
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
+                                            style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
+                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                                        />
+                                    )}
+
+                                    {/* Hover bg */}
+                                    {!isActive && (
+                                        <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/[0.04] transition-colors duration-200" />
+                                    )}
+
+                                    {/* Icon */}
+                                    <div
+                                        className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200"
+                                        style={isActive ? {
+                                            background: `${item.color}22`,
+                                            boxShadow: `0 0 12px ${item.color}30`,
+                                        } : {}}
+                                    >
+                                        <item.icon
+                                            className="w-4 h-4 transition-colors duration-200"
+                                            style={isActive ? { color: item.color } : {}}
+                                        />
+                                    </div>
+
                                     <AnimatePresence>
                                         {!collapsed && (
                                             <motion.span
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="relative z-10"
+                                                initial={{ opacity: 0, width: 0 }}
+                                                animate={{ opacity: 1, width: 'auto' }}
+                                                exit={{ opacity: 0, width: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="relative z-10 text-sm font-medium whitespace-nowrap overflow-hidden"
                                             >
                                                 {item.label}
                                             </motion.span>
@@ -142,40 +195,78 @@ export default function Sidebar() {
                     ))}
                 </nav>
 
-                <div className="px-3 pb-4">
-                    <button
+                {/* User + Logout */}
+                <div className="px-2.5 pb-3 border-t border-white/[0.06] pt-3 space-y-1">
+                    {/* User chip */}
+                    <AnimatePresence>
+                        {!collapsed && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl mb-1"
+                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                            >
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #7c6fff, #a78bfa)' }}>
+                                    <User className="w-3.5 h-3.5 text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-semibold text-white truncate">{user?.username || 'User'}</p>
+                                    <p className="text-[10px] text-slate-500 truncate">{user?.email || 'Portfolio'}</p>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Logout */}
+                    <motion.button
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={logout}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all duration-200"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/[0.08] transition-all duration-200 group"
                     >
-                        <LogOut className="w-5 h-5 shrink-0" />
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-rose-500/10 transition-colors">
+                            <LogOut className="w-4 h-4" />
+                        </div>
                         <AnimatePresence>
                             {!collapsed && (
                                 <motion.span
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="text-sm font-medium"
+                                    className="text-sm font-medium whitespace-nowrap"
                                 >
-                                    Logout
+                                    Sign Out
                                 </motion.span>
                             )}
                         </AnimatePresence>
-                    </button>
-                </div>
+                    </motion.button>
 
-                <div className="px-3 py-4 border-t border-white/5 hidden md:block">
+                    {/* Collapse toggle — desktop only */}
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+                        className="hidden md:flex w-full items-center gap-3 px-3 py-2 rounded-xl text-slate-600 hover:text-slate-400 hover:bg-white/[0.04] transition-all duration-200"
                     >
-                        {collapsed ? (
-                            <ChevronRight className="w-4 h-4" />
-                        ) : (
-                            <>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                            {collapsed ? (
+                                <ChevronRight className="w-4 h-4" />
+                            ) : (
                                 <ChevronLeft className="w-4 h-4" />
-                                <span className="text-sm">Collapse</span>
-                            </>
-                        )}
+                            )}
+                        </div>
+                        <AnimatePresence>
+                            {!collapsed && (
+                                <motion.span
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-xs font-medium"
+                                >
+                                    Collapse
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
                     </button>
                 </div>
             </motion.aside>

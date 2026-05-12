@@ -1,123 +1,194 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wallet } from 'lucide-react';
+import { Wallet, Eye, EyeOff, ArrowRight, UserPlus } from 'lucide-react';
 import { authAPI } from '../api/api';
 import toast from 'react-hot-toast';
 
 export default function Register() {
     const [userData, setUserData] = useState({ username: '', email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setUserData(prev => ({ ...prev, [name]: value }));
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (userData.password.length < 6) {
-            toast.error('Password must be at least 6 characters long.');
+            toast.error('Password must be at least 6 characters.');
             return;
         }
-
+        setLoading(true);
         try {
             await authAPI.register(userData);
-            toast.success('Registration successful! Please login.');
+            toast.success('Account created! Please sign in.');
             navigate('/login');
         } catch (error) {
             const msg = error.response?.data?.message || error.message || 'Registration failed.';
             toast.error(msg);
+        } finally {
+            setLoading(false);
         }
     };
 
+    const fields = [
+        { key: 'username', label: 'Username', type: 'text', placeholder: 'Choose a username', minLength: 3 },
+        { key: 'email',    label: 'Email',    type: 'email', placeholder: 'your@email.com' },
+    ];
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface-primary)] p-4 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-[100px]" />
-            </div>
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#04070f] p-4">
+            <div className="ambient-bg" />
+            <div className="fixed top-1/3 right-1/4 w-96 h-96 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(124,111,255,0.10) 0%, transparent 70%)' }} />
+            <div className="fixed bottom-1/3 left-1/4 w-80 h-80 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(34,211,238,0.07) 0%, transparent 70%)' }} />
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
+                initial={{ opacity: 0, y: 32, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-md"
             >
-                {/* Logo Area */}
-                <div className="flex flex-col items-center justify-center mb-8 relative z-10">
+                {/* Logo */}
+                <motion.div
+                    initial={{ opacity: 0, y: -16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                    className="flex flex-col items-center mb-8"
+                >
                     <motion.div
-                        whileHover={{ rotate: 15, scale: 1.1 }}
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-blue-500/20"
-                        style={{ background: 'linear-gradient(135deg, #5c7cfa, #8b5cf6)' }}
+                        whileHover={{ rotate: 10, scale: 1.08 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                        style={{
+                            background: 'linear-gradient(135deg, #7c6fff 0%, #a78bfa 50%, #22d3ee 100%)',
+                            boxShadow: '0 8px 32px rgba(124,111,255,0.4)',
+                        }}
                     >
                         <Wallet className="w-8 h-8 text-white" />
                     </motion.div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">FinTrack</h1>
-                    <p className="text-slate-400 mt-1 font-medium">Your Personal Finance Manager</p>
-                </div>
+                    <h1 className="text-3xl font-bold text-gradient">FinTrack</h1>
+                    <p className="text-sm text-slate-500 mt-1">Start your financial journey</p>
+                </motion.div>
 
-                <div className="bg-[#111a2e]/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/10 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl mix-blend-screen" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl mix-blend-screen" />
+                {/* Card */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="glass-card p-8 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 left-8 right-8 h-px"
+                        style={{ background: 'linear-gradient(90deg, transparent, rgba(124,111,255,0.5), transparent)' }} />
 
-                    <div className="relative z-10">
-                        <h2 className="text-2xl font-bold text-white mb-6 text-center">Create Account</h2>
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Username</label>
+                    <div className="flex items-center gap-2 mb-6">
+                        <UserPlus className="w-4 h-4 text-violet-400" />
+                        <h2 className="text-lg font-semibold text-white">Create account</h2>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {fields.map(({ key, label, type, placeholder, minLength }) => (
+                            <div key={key} className="space-y-1.5">
+                                <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">{label}</label>
                                 <input
-                                    type="text"
-                                    name="username"
-                                    value={userData.username}
-                                    onChange={handleChange}
+                                    type={type}
+                                    value={userData[key]}
+                                    onChange={(e) => setUserData({ ...userData, [key]: e.target.value })}
                                     required
-                                    minLength={3}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all font-medium"
-                                    placeholder="Choose a username"
+                                    minLength={minLength}
+                                    className="glass-input w-full px-4 py-3.5 text-sm text-white placeholder-slate-600 transition-all"
+                                    placeholder={placeholder}
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                        ))}
+
+                        {/* Password */}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Password</label>
+                            <div className="relative">
                                 <input
-                                    type="email"
-                                    name="email"
-                                    value={userData.email}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all font-medium"
-                                    placeholder="Enter your email"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={userData.password}
-                                    onChange={handleChange}
+                                    onChange={(e) => setUserData({ ...userData, password: e.target.value })}
                                     required
                                     minLength={6}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all font-medium"
-                                    placeholder="Create a password (min 6 chars)"
+                                    className="glass-input w-full px-4 py-3.5 pr-12 text-sm text-white placeholder-slate-600 transition-all"
+                                    placeholder="Minimum 6 characters"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-slate-300 transition-colors rounded-lg hover:bg-white/5"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
-                            <button
-                                type="submit"
-                                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#8b5cf6] to-[#5c7cfa] hover:from-[#7c4dff] hover:to-[#4b6bfb] text-white rounded-xl font-semibold transition-all shadow-lg shadow-violet-500/25 mt-8 transform hover:-translate-y-0.5"
+                        </div>
+
+                        {/* Password strength bar */}
+                        {userData.password.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="space-y-1"
                             >
-                                Sign Up
-                            </button>
-                        </form>
-                        <p className="mt-8 text-center text-slate-400 text-sm">
-                            Already have an account?{' '}
-                            <Link to="/login" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
-                                Login here
-                            </Link>
-                        </p>
-                    </div>
-                </div>
+                                <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                                    <motion.div
+                                        className="h-full rounded-full"
+                                        initial={{ width: 0 }}
+                                        animate={{
+                                            width: userData.password.length < 6 ? '25%'
+                                                : userData.password.length < 10 ? '60%' : '100%',
+                                        }}
+                                        style={{
+                                            background: userData.password.length < 6
+                                                ? '#fb7185'
+                                                : userData.password.length < 10
+                                                ? '#fbbf24'
+                                                : '#34d399',
+                                        }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500">
+                                    {userData.password.length < 6 ? 'Too short' : userData.password.length < 10 ? 'Medium strength' : 'Strong'}
+                                </p>
+                            </motion.div>
+                        )}
+
+                        <motion.button
+                            type="submit"
+                            disabled={loading}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-sm font-semibold text-white transition-all mt-2 disabled:opacity-60"
+                            style={{
+                                background: 'linear-gradient(135deg, #7c6fff 0%, #a78bfa 100%)',
+                                boxShadow: '0 4px 24px rgba(124,111,255,0.35)',
+                            }}
+                        >
+                            {loading ? (
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                />
+                            ) : (
+                                <>
+                                    Create Account
+                                    <ArrowRight className="w-4 h-4" />
+                                </>
+                            )}
+                        </motion.button>
+                    </form>
+
+                    <p className="text-center text-sm text-slate-500 mt-6">
+                        Already have an account?{' '}
+                        <Link to="/login" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+                            Sign in
+                        </Link>
+                    </p>
+                </motion.div>
             </motion.div>
         </div>
     );
